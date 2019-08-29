@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Blog.core.Model;
 using Blog.core.Test;
-
+using Microsoft.AspNetCore.Authorization;//需要引用
 using Microsoft.AspNetCore.Mvc;
 
 namespace Blog.core.Controllers
@@ -25,11 +25,11 @@ namespace Blog.core.Controllers
         /// 获取列表
         /// </summary>
         /// <returns></returns>
-        [HttpGet]
-        public ActionResult<IEnumerable<string>> Get()
-        {
-            return new string[] { "value1", "value2" };
-        }
+        //[HttpGet]
+        //public ActionResult<IEnumerable<string>> Get()
+        //{
+        //    return new string[] { "value1", "value2" };
+        //}
 
         //查
         // GET api/values/5
@@ -133,8 +133,18 @@ namespace Blog.core.Controllers
             });
         }
 
+        /// <summary>
+        /// token授权登录
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Authorize(Roles ="Admin")]
+        //[Authorize(Policy = "SystemOrAdmin")]//策略授权机制
+        public ActionResult<IEnumerable<string>> GetLogin()
+        {
 
-        public ActionResult<IEnumerable<string>> Get
+            return new string[] {"value1", "value2"};
+        }
 
     }
 }

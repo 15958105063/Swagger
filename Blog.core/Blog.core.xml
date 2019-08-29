@@ -9,12 +9,6 @@
             
             </summary>
         </member>
-        <member name="M:Blog.core.Controllers.ValuesController.Get">
-            <summary>
-            获取列表
-            </summary>
-            <returns></returns>
-        </member>
         <member name="M:Blog.core.Controllers.ValuesController.Get(System.Int32)">
             <summary>
             查询
@@ -60,6 +54,12 @@
             </summary>
             <param name="name"></param>
             <param name="pass"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Blog.core.Controllers.ValuesController.GetLogin">
+            <summary>
+            token授权登录
+            </summary>
             <returns></returns>
         </member>
         <member name="T:Blog.core.Program">

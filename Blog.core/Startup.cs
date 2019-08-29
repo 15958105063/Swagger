@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Blog.core.Test;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -49,8 +50,6 @@ namespace Blog.core
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2); // 注册MVC到Container
 
             #region Swagger
-
-            #endregion
 
             services.AddSwaggerGen(c =>
             {
@@ -106,6 +105,32 @@ namespace Blog.core
 
 
             });
+
+            #endregion
+
+
+            #region Authorize
+
+            //基于策略的授权机制：
+            //[HttpGet]
+            //    [Authorize(Roles = "Admin")]
+            //    [Authorize(Roles = "System")]
+            //public ActionResult<IEnumerable<string>> GetLogin()
+            //{
+
+            //    return new string[] { "value1", "value2" };
+            //}
+        // 1【授权】、这个和上边的异曲同工，好处就是不用在controller中，写多个 roles 。
+        // 然后这么写 [Authorize(Policy = "Admin")]
+        services.AddAuthorization(option =>
+            {
+                option.AddPolicy("Client",policy=>policy.RequireRole("Client").Build());
+                option.AddPolicy("Admin", policy => policy.RequireRole("Admin").Build());
+                option.AddPolicy("SystemOrAdmin", policy => policy.RequireRole("Admin","System"));
+
+            });
+
+            #endregion
         }
 
 
@@ -155,7 +180,10 @@ namespace Blog.core
             #region Authen
             //app.UseMiddleware<JwtTokenAuth>();//注意此授权方法已经放弃，请使用下边的官方验证方法。但是如果你还想传User的全局变量，还是可以继续使用中间件
 
-            app.UseAuthentication();
+            //app.UseAuthentication();
+
+            //自定义认证中间件
+            app.UseJwtTokenAuth(); //也可以app.UseMiddleware<JwtTokenAuth>();
             #endregion
 
             #region CORS

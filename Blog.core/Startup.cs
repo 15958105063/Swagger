@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Blog.core.Test;
 using Microsoft.AspNetCore.Builder;
@@ -11,9 +12,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.PlatformAbstractions;
+using Microsoft.Extensions.PlatformAbstractions;//需要引用Nuget包
 using Swashbuckle.AspNetCore.Swagger;
-//using Microsoft.Extensions.PlatformAbstractions;//需要引用Nuget包
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Blog.core
 {
@@ -120,16 +122,49 @@ namespace Blog.core
 
             //    return new string[] { "value1", "value2" };
             //}
-        // 1【授权】、这个和上边的异曲同工，好处就是不用在controller中，写多个 roles 。
-        // 然后这么写 [Authorize(Policy = "Admin")]
-        services.AddAuthorization(option =>
+            // 1【授权】、这个和上边的异曲同工，好处就是不用在controller中，写多个 roles 。
+            // 然后这么写 [Authorize(Policy = "Admin")]
+
+            //自定义中间件认证配置
+            //services.AddAuthorization(option =>
+            //    {
+            //        option.AddPolicy("Client",policy=>policy.RequireRole("Client").Build());
+            //        option.AddPolicy("Admin", policy => policy.RequireRole("Admin").Build());
+            //        option.AddPolicy("SystemOrAdmin", policy => policy.RequireRole("Admin","System"));
+            //    });
+
+            //读取配置文件
+            var audienceConfig = Configuration.GetSection("Audience");
+            var symmetricKeyAsBase64 = audienceConfig["Secret"];
+            var keyByteArray = Encoding.ASCII.GetBytes(symmetricKeyAsBase64);
+            var signingKey = new SymmetricSecurityKey(keyByteArray);
+            //官方认证配置
+            services.AddAuthentication(x =>
             {
-                option.AddPolicy("Client",policy=>policy.RequireRole("Client").Build());
-                option.AddPolicy("Admin", policy => policy.RequireRole("Admin").Build());
-                option.AddPolicy("SystemOrAdmin", policy => policy.RequireRole("Admin","System"));
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; //需要引用NuGet包
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(o =>
+            {
+                o.TokenValidationParameters = new TokenValidationParameters
+                {
 
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = signingKey,//参数配置在上边
+                    ValidateIssuer = true,
+                    ValidIssuer = audienceConfig["Issuer"],//发行人
+                    ValidateAudience = true,
+                    ValidAudience = audienceConfig["Audience"],//订阅人
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero,
+                    RequireExpirationTime = true,
+                };
             });
+      
 
+
+
+        var signingCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
             #endregion
         }
 
